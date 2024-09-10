@@ -29,7 +29,7 @@ class Banco:
         
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS cliente (
-                idcli INTEGER PRIMARY KEY AUTOINCREMENT,
+                idcli INTEGER PRIMARY KEY AUTOINCREMENT, 
                 nome TEXT,
                 telefone TEXT,
                 email TEXT,

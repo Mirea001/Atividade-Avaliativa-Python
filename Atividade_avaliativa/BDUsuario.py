@@ -1,5 +1,14 @@
 from Banco import Banco
 
+def populate_treeview(treeview, data):
+    # Primeiro, limpe qualquer dado existente no Treeview
+    for item in treeview.get_children():
+        treeview.delete(item)
+
+    # Agora, insira os novos dados
+    for row in data:
+        treeview.insert("", "end", values=row)
+
 class Usuario:
     def __init__(self):
         self.banco = Banco()
@@ -29,3 +38,8 @@ class Usuario:
         cursor = self.banco.conexao.cursor()
         cursor.execute('SELECT * FROM usuarios WHERE idUsuario=?', (idUsuario,))
         return cursor.fetchone()
+
+    def listar(self):
+        cursor = self.banco.conexao.cursor()
+        cursor.execute('SELECT idUsuario, nome, telefone, email FROM usuarios')
+        return cursor.fetchall()

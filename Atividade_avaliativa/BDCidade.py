@@ -1,5 +1,14 @@
 from Banco import Banco
 
+def populate_treeview(treeview, data):
+    # Primeiro, limpe qualquer dado existente no Treeview
+    for item in treeview.get_children():
+        treeview.delete(item)
+
+    # Agora, insira os novos dados
+    for row in data:
+        treeview.insert("", "end", values=row)
+
 class cidade:
     def __init__(self):
         self.banco = Banco()

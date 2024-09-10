@@ -1,6 +1,8 @@
 from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
 import os
-from BDUsuario import Usuario
+from BDUsuario import Usuario, populate_treeview
 
 class Application:
     def __init__(self, root):
@@ -8,7 +10,7 @@ class Application:
 
         self.root = root
         self.root.title("Cadastro de Usuários")
-        self.root.configure(bg="#81c784")  # Define the background color for the main window
+        self.root.configure(bg="#81c784")  # Define a cor de fundo da janela principal
 
         self.lblIdUsuario = Label(root, text="idUsuario:", font=("Times", 16), bg="#81c784", fg="#1b5e20")
         self.lblIdUsuario.grid(row=0, column=0, padx=10, pady=10, sticky=W)
@@ -43,7 +45,7 @@ class Application:
         self.txtSenha = Entry(root, show="*")
         self.txtSenha.grid(row=5, column=1, padx=10, pady=10)
 
-        # Buttons with updated styling
+        # Botões com estilização atualizada
         self.btnInserir = Button(root, text="Inserir", font=("Times", 14), bg="#a5d6a7", fg="#f0f0f0", activebackground="#1b5e20", activeforeground="#f0f0f0", command=self.inserir_usuario)
         self.btnInserir.grid(row=6, column=0, padx=6, pady=6)
 
@@ -56,14 +58,27 @@ class Application:
         self.btnVoltar = Button(root, text="Voltar", font=("Times", 14), bg="#a5d6a7", fg="#f0f0f0", activebackground="#1b5e20", activeforeground="#f0f0f0", command=self.Principal)
         self.btnVoltar.grid(row=6, column=3, padx=6, pady=6)
 
-        self.lblMensagem = Label(root, text="", fg="#d32f2f", bg="#81c784")
-        self.lblMensagem.grid(row=7, column=0, columnspan=3, pady=10)
+        # Configurando o Treeview
+        self.columns = ('IDUSUÁRIO', 'NOME', 'TELEFONE', 'E-mail', 'USUÁRIO', 'SENHA')
+        self.treeview = ttk.Treeview(root, columns=self.columns, show="headings")
+        for col in self.columns:
+            self.treeview.heading(col, text=col)
+        self.treeview.grid(row=8, column=0, columnspan=3, sticky="nsew")
 
-        
+        # Chama o método de refresh ao iniciar
+        self.refresh_treeview()
 
-        # Bind to detect window close event
+        # Bind para detectar o fechamento da janela
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-    
+
+    def refresh_treeview(self):
+        """Função para atualizar o Treeview com os dados mais recentes."""
+        data = self.usuario.listar()  # Corrigido para usar self.usuario
+        if not data:
+            print("Nenhum dado encontrado ou ocorreu um erro ao buscar os dados.")
+        else:
+            populate_treeview(self.treeview, data)
+
     def Principal(self):
         self.root.destroy()
         caminho_script = 'python Principal.py'
@@ -71,6 +86,10 @@ class Application:
 
     def buscar_usuario(self):
         idUsuario = self.txtIdUsuario.get()
+        if not idUsuario:
+            messagebox.showerror("Erro", "ID do usuário não pode estar vazio!")
+            return
+        
         resultado = self.usuario.buscar(idUsuario)
         if resultado:
             self.txtNome.delete(0, END)
@@ -83,9 +102,10 @@ class Application:
             self.txtUsuario.insert(END, resultado[4])
             self.txtSenha.delete(0, END)
             self.txtSenha.insert(END, resultado[5])
-            messagebox.showerror(text="Busca realizada com sucesso!", fg="green")
+            messagebox.showinfo("Sucesso", "Busca realizada com sucesso!")
         else:
-            messagebox.showerror(text="Usuário não encontrado!", fg="#d32f2f")
+            messagebox.showerror("Erro", "Usuário não encontrado!")
+        self.refresh_treeview()
 
     def inserir_usuario(self):
         nome = self.txtNome.get()
@@ -93,8 +113,14 @@ class Application:
         email = self.txtEmail.get()
         usuario = self.txtUsuario.get()
         senha = self.txtSenha.get()
+
+        if not nome or not telefone or not email or not usuario or not senha:
+            messagebox.showerror("Erro", "Todos os campos devem ser preenchidos!")
+            return
+
         self.usuario.inserir(nome, telefone, email, usuario, senha)
-        self.lblMensagem.config(text="Usuário inserido com sucesso!", fg="green")
+        messagebox.showinfo("Sucesso", "Usuário inserido com sucesso!")
+        self.refresh_treeview()
 
     def alterar_usuario(self):
         idUsuario = self.txtIdUsuario.get()
@@ -103,17 +129,29 @@ class Application:
         email = self.txtEmail.get()
         usuario = self.txtUsuario.get()
         senha = self.txtSenha.get()
+
+        if not idUsuario:
+            messagebox.showerror("Erro", "ID do usuário não pode estar vazio!")
+            return
+
         self.usuario.alterar(idUsuario, nome, telefone, email, usuario, senha)
-        messagebox.showerror(text="Usuário alterado com sucesso!", fg="green")
+        messagebox.showinfo("Sucesso", "Usuário alterado com sucesso!")
+        self.refresh_treeview()
 
     def excluir_usuario(self):
         idUsuario = self.txtIdUsuario.get()
+        if not idUsuario:
+            messagebox.showerror("Erro", "ID do usuário não pode estar vazio!")
+            return
+
         self.usuario.excluir(idUsuario)
-        messagebox.showerror(text="Usuário excluído com sucesso!", fg="green")
+        messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!")
+        self.refresh_treeview()
 
     def on_closing(self):
-        self.root.destroy()
-        os.system('python principal.py')
+        if messagebox.askokcancel("Sair", "Você deseja sair do aplicativo?"):
+            self.root.destroy()
+
 
 # Execução da interface
 if __name__ == "__main__":

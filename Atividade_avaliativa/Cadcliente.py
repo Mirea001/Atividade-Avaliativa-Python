@@ -1,7 +1,8 @@
 from tkinter import *
-from tkinter import messagebox, ttk
+from tkinter import ttk
+from tkinter import messagebox
 import os
-from BDCliente import Cliente  
+from BDCliente import Cliente, populate_treeview
 from BDCidade import cidade
 
 class Application:
@@ -11,32 +12,43 @@ class Application:
 
         self.root = root
         self.root.title("Cadastro de Clientes")
+        self.root.configure(bg="#81c784")  # Define a cor de fundo da janela principal
+
+        # Estilo dos botões
+        estilo_botao = {
+            "font": ("Times", 12),
+            "bg": "#a5d6a7",
+            "fg": "#1b5e20",
+            "relief": "raised",
+            "activebackground": "#1b5e20",
+            "activeforeground": "#f0f0f0"
+        }
 
         # Widgets
-        self.lblIdCliente = Label(root, text="ID do Cliente:")
+        self.lblIdCliente = Label(root, text="ID do Cliente:", bg="#81c784", fg="#1b5e20")
         self.lblIdCliente.grid(row=0, column=0)
         self.txtIdCliente = Entry(root)
         self.txtIdCliente.grid(row=0, column=1)
 
-        self.btnBuscar = Button(root, text="Buscar", command=self.buscar_cliente)
-        self.btnBuscar.grid(row=0, column=2)
+        self.btnBuscar = Button(root, text="Buscar", command=self.buscar_cliente, **estilo_botao)
+        self.btnBuscar.grid(row=0, column=3)
 
-        self.lblNome = Label(root, text="Nome:")
+        self.lblNome = Label(root, text="Nome:", bg="#81c784", fg="#1b5e20")
         self.lblNome.grid(row=1, column=0)
         self.txtNome = Entry(root)
         self.txtNome.grid(row=1, column=1)
 
-        self.lblTelefone = Label(root, text="Telefone:")
+        self.lblTelefone = Label(root, text="Telefone:", bg="#81c784", fg="#1b5e20")
         self.lblTelefone.grid(row=2, column=0)
         self.txtTelefone = Entry(root)
         self.txtTelefone.grid(row=2, column=1)
 
-        self.lblEmail = Label(root, text="E-mail:")
+        self.lblEmail = Label(root, text="E-mail:", bg="#81c784", fg="#1b5e20")
         self.lblEmail.grid(row=3, column=0)
         self.txtEmail = Entry(root)
         self.txtEmail.grid(row=3, column=1)
 
-        self.lblcidade = Label(root, text="Cidade:")
+        self.lblcidade = Label(root, text="Cidade:", bg="#81c784", fg="#1b5e20")
         self.lblcidade.grid(row=4, column=0)
 
         # Dropdown para cidades
@@ -48,47 +60,47 @@ class Application:
             self.varcidade.set("")  # Caso não haja cidades, deixa o dropdown vazio
 
         self.dropdowncidade = OptionMenu(root, self.varcidade, *self.cidade_disponiveis)
+        self.dropdowncidade.config(bg="#a5d6a7", fg="#1b5e20", activebackground="#1b5e20", activeforeground="#f0f0f0")
         self.dropdowncidade.grid(row=4, column=1)
-
+         
         # Botões
-        self.btnInserir = Button(root, text="Inserir", command=self.inserir_cliente)
+        self.btnInserir = Button(root, text="Inserir", command=self.inserir_cliente, **estilo_botao)
         self.btnInserir.grid(row=5, column=0)
 
-        self.btnAlterar = Button(root, text="Alterar", command=self.alterar_cliente)
+        self.btnAlterar = Button(root, text="Alterar", command=self.alterar_cliente, **estilo_botao)
         self.btnAlterar.grid(row=5, column=1)
 
-        self.btnExcluir = Button(root, text="Excluir", command=self.excluir_cliente)
+        self.btnExcluir = Button(root, text="Excluir", command=self.excluir_cliente, **estilo_botao)
         self.btnExcluir.grid(row=5, column=2)
 
-        self.lblMensagem = Label(root, text="")
-        self.lblMensagem.grid(row=6, column=0, columnspan=3)
+        self.btnVoltar = Button(root, text="Voltar", command=self.Principal, **estilo_botao)
+        self.btnVoltar.grid(row=5, column=3, padx=6, pady=6)
 
-        # Treeview para listar os clientes
-        self.tree = ttk.Treeview(root, columns=("id", "nome", "telefone", "email", "cidade"), show="headings")
-        self.tree.heading("id", text="ID")
-        self.tree.heading("nome", text="Nome")
-        self.tree.heading("telefone", text="Telefone")
-        self.tree.heading("email", text="E-mail")
-        self.tree.heading("cidade", text="Cidade")
+        # Configurando o Treeview
+        self.columns = ('ID CLIENTE', 'NOME', 'TELEFONE', 'EMAIL', 'ID CIDADE')
+        self.treeview = ttk.Treeview(root, columns=self.columns, show="headings")
+        for col in self.columns:
+            self.treeview.heading(col, text=col)
+        self.treeview.grid(row=8, column=0, columnspan=3, sticky="nsew")
 
-        self.tree.column("id", width=50)
-        self.tree.column("nome", width=150)
-        self.tree.column("telefone", width=100)
-        self.tree.column("email", width=200)
-        self.tree.column("cidade", width=100)
+        # Chama o método de refresh ao iniciar
+        self.refresh_treeview()
 
-        self.tree.grid(row=7, column=0, columnspan=4, sticky="nsew")
-
-        # Barra de rolagem para o Treeview
-        self.scrollbar = ttk.Scrollbar(root, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscroll=self.scrollbar.set)
-        self.scrollbar.grid(row=7, column=4, sticky='ns')
-
-        # Carrega os clientes no Treeview
-        self.carregar_clientes()
+    def refresh_treeview(self):
+        """Função para atualizar o Treeview com os dados mais recentes."""
+        data = self.cliente.listar()
+        if not data:
+            print("Nenhum dado encontrado ou ocorreu um erro ao buscar os dados.")
+        else:
+            populate_treeview(self.treeview, data)
 
         # Bind para detectar o fechamento da janela
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+    
+    def Principal(self):
+        self.root.destroy()
+        caminho_script = 'python Principal.py'
+        os.system(caminho_script)
 
     def listar_cidades(self):
         try:
@@ -99,11 +111,12 @@ class Application:
         except Exception as e:
             print(f"Erro ao carregar cidades: {e}")  # Exibe o erro no console para depuração
         return ["Erro ao carregar cidades"]
+        self.refresh_treeview()
 
     def buscar_cliente(self):
         idCliente = self.txtIdCliente.get()
         if not idCliente:
-            self.atualizar_mensagem("ID do cliente não pode estar vazio!", "error")
+            messagebox.showerror("Erro", "ID do cliente não pode estar vazio!")
             return
 
         resultado = self.cliente.buscar(idCliente)
@@ -116,9 +129,10 @@ class Application:
             self.txtEmail.insert(END, resultado[3])
             if resultado[4] in self.cidade_disponiveis:
                 self.varcidade.set(resultado[4])
-            self.atualizar_mensagem("Busca realizada com sucesso!")
+            messagebox.showinfo("Sucesso", "Busca realizada com sucesso!")
         else:
-            self.atualizar_mensagem("Cliente não encontrado!", "error")
+            messagebox.showerror("Erro", "Cliente não encontrado!")
+        self.refresh_treeview()
 
     def inserir_cliente(self):
         nome = self.txtNome.get()
@@ -127,12 +141,12 @@ class Application:
         cidade = self.varcidade.get()
 
         if not nome or not telefone or not email or not cidade:
-            self.atualizar_mensagem("Todos os campos devem ser preenchidos!", "error")
+            messagebox.showerror("Erro", "Todos os campos devem ser preenchidos!")
             return
 
         self.cliente.inserir(nome, telefone, email, cidade)
-        self.atualizar_mensagem("Cliente inserido com sucesso!")
-        self.carregar_clientes()
+        messagebox.showinfo("Sucesso", "Cliente inserido com sucesso!")
+        self.refresh_treeview()
 
     def alterar_cliente(self):
         idCliente = self.txtIdCliente.get()
@@ -142,43 +156,26 @@ class Application:
         cidade = self.varcidade.get()
 
         if not idCliente:
-            self.atualizar_mensagem("ID do cliente não pode estar vazio!", "error")
+            messagebox.showerror("Erro", "ID do cliente não pode estar vazio!")
             return
 
         self.cliente.alterar(idCliente, nome, telefone, email, cidade)
-        self.atualizar_mensagem("Cliente alterado com sucesso!")
-        self.carregar_clientes()
+        messagebox.showinfo("Sucesso", "Cliente alterado com sucesso!")
+        self.refresh_treeview()
 
     def excluir_cliente(self):
         idCliente = self.txtIdCliente.get()
         if not idCliente:
-            self.atualizar_mensagem("ID do cliente não pode estar vazio!", "error")
+            messagebox.showerror("Erro", "ID do cliente não pode estar vazio!")
             return
 
         self.cliente.excluir(idCliente)
-        self.atualizar_mensagem("Cliente excluído com sucesso!")
-        self.carregar_clientes()
-
-    def carregar_clientes(self):
-        """Função para carregar os dados dos clientes no Treeview"""
-        # Limpa os dados antigos
-        for row in self.tree.get_children():
-            self.tree.delete(row)
-
-        # Carrega os novos dados
-        for Cliente in self.cliente.listar_todos():
-            self.tree.insert("", "end", values=(Cliente[0], Cliente[1], Cliente[2], Cliente[3], Cliente[4]))
-
-    def atualizar_mensagem(self, mensagem, tipo="info"):
-        """Atualiza a mensagem na interface com cores diferentes dependendo do tipo."""
-        if tipo == "info":
-            self.lblMensagem.config(text=mensagem, fg="green")
-        else:
-            self.lblMensagem.config(text=mensagem, fg="red")
+        messagebox.showinfo("Sucesso", "Cliente excluído com sucesso!")
+        self.refresh_treeview()
 
     def on_closing(self):
-        self.root.destroy()
-        os.system('python principal.py')  # Reabre o principal.py ao fechar a janela
+        if messagebox.askokcancel("Sair", "Você deseja sair do aplicativo?"):
+            self.root.destroy()
 
 # Execução da interface
 if __name__ == "__main__":
