@@ -2,7 +2,7 @@ from tkinter import *  # Importa tudo do módulo tkinter
 from tkinter import ttk
 from tkinter import messagebox
 import os
-from BDCidade import cidade  # Importa a classe cidade do módulo BDcidade
+from BDCidade import cidade, populate_treeview  # Importa a classe cidade do módulo BDcidade
 
 class Application:
     def __init__(self, root):
@@ -61,13 +61,13 @@ class Application:
 
     def refresh_treeview(self):
         """Função para atualizar o Treeview com os dados mais recentes."""
-        data = self.cidade.listar()  # Corrigido para usar self.usuario
+        data = self.cidade.listar_cidades()  # Corrigido para usar self.cidade.listar_cidades()
         if not data:
-            print("Nenhum dado encontrado ou ocorreu um erro ao buscar os dados.")
+         print("Nenhum dado encontrado ou ocorreu um erro ao buscar os dados.")
         else:
             populate_treeview(self.treeview, data)
 
-        # Bind para detectar o fechamento da janela
+    # Bind para detectar o fechamento da janela
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def Principal(self):

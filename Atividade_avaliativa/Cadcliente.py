@@ -3,7 +3,7 @@ from tkinter import ttk
 from tkinter import messagebox
 import os
 from BDCliente import Cliente, populate_treeview
-from BDCidade import cidade
+from BDCidade import cidade, populate_treeview
 
 class Application:
     def __init__(self, root):
@@ -53,7 +53,7 @@ class Application:
 
         # Dropdown para cidades
         self.varcidade = StringVar(root)
-        self.cidade_disponiveis = self.listar_cidades()
+        self.cidade_disponiveis = self.cidade.listar_cidades()
         if self.cidade_disponiveis:
             self.varcidade.set(self.cidade_disponiveis[0])  # Define a primeira cidade como padrão
         else:
@@ -83,35 +83,45 @@ class Application:
             self.treeview.heading(col, text=col)
         self.treeview.grid(row=8, column=0, columnspan=3, sticky="nsew")
 
+        # Bind para detectar a seleção de um item no Treeview
+        self.treeview.bind("<ButtonRelease-1>", self.selecionar_item_treeview)
+
         # Chama o método de refresh ao iniciar
         self.refresh_treeview()
 
-    def refresh_treeview(self):
-        """Função para atualizar o Treeview com os dados mais recentes."""
-        data = self.cliente.listar()
-        if not data:
-            print("Nenhum dado encontrado ou ocorreu um erro ao buscar os dados.")
-        else:
-            populate_treeview(self.treeview, data)
-
         # Bind para detectar o fechamento da janela
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
-    
+
+    def refresh_treeview(self):
+        """Função para atualizar o Treeview com os dados mais recentes."""
+        data = self.cliente.listar_todos()
+        # Limpa os dados antigos
+        for row in self.treeview.get_children():
+            self.treeview.delete(row)
+        # Popula os novos dados
+        for cliente in data:
+            self.treeview.insert('', 'end', values=cliente)
+
+    def selecionar_item_treeview(self, event):
+        """Função para preencher os campos ao clicar em um item do Treeview."""
+        selecionado = self.treeview.focus()
+        valores = self.treeview.item(selecionado, 'values')
+        
+        if valores:
+            self.txtIdCliente.delete(0, END)
+            self.txtIdCliente.insert(END, valores[0])
+            self.txtNome.delete(0, END)
+            self.txtNome.insert(END, valores[1])
+            self.txtTelefone.delete(0, END)
+            self.txtTelefone.insert(END, valores[2])
+            self.txtEmail.delete(0, END)
+            self.txtEmail.insert(END, valores[3])
+            self.varcidade.set(valores[4])
+
     def Principal(self):
         self.root.destroy()
         caminho_script = 'python Principal.py'
         os.system(caminho_script)
-
-    def listar_cidades(self):
-        try:
-            cursor = self.cliente.banco.conexao.cursor()  # Utiliza a conexão do banco de dados do cliente
-            cursor.execute("SELECT nome FROM cidade")  # Ajuste a query conforme o nome real da tabela e coluna
-            cidades = [row[0] for row in cursor.fetchall()]  # Constrói a lista com os nomes das cidades
-            return cidades if cidades else ["Nenhuma cidade cadastrada"]
-        except Exception as e:
-            print(f"Erro ao carregar cidades: {e}")  # Exibe o erro no console para depuração
-        return ["Erro ao carregar cidades"]
-        self.refresh_treeview()
 
     def buscar_cliente(self):
         idCliente = self.txtIdCliente.get()

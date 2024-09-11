@@ -41,5 +41,7 @@ class cidade:
 
     def listar_cidades(self):
         cursor = self.banco.conexao.cursor()
-        cursor.execute('SELECT idcid, nome FROM cidade')
+        # Corrigido para incluir a coluna 'uf' na consulta
+        cursor.execute('SELECT idcid, nome, uf FROM cidade')
         return cursor.fetchall()
+

@@ -9,14 +9,6 @@ def populate_treeview(treeview, data):
     for row in data:
         treeview.insert("", "end", values=row)
 
-def populate_treeview(treeview, data):
-    # Primeiro, limpe qualquer dado existente no Treeview
-    for item in treeview.get_children():
-        treeview.delete(item)
-
-    # Agora, insira os novos dados
-    for row in data:
-        treeview.insert("", "end", values=row)
 
 class Cliente:
     def __init__(self):
@@ -50,7 +42,7 @@ class Cliente:
     def listar_todos(self):
         try:
             cursor = self.banco.conexao.cursor()
-            cursor.execute("SELECT id, nome, telefone, email, cidade FROM cliente")  # Ajuste conforme o nome real da tabela
+            cursor.execute("SELECT idcli, nome, telefone, email, idcid FROM cliente")  # Ajuste conforme o nome real da tabela
             clientes = cursor.fetchall()
             return clientes
         except Exception as e:

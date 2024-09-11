@@ -41,5 +41,5 @@ class Usuario:
 
     def listar(self):
         cursor = self.banco.conexao.cursor()
-        cursor.execute('SELECT idUsuario, nome, telefone, email FROM usuarios')
+        cursor.execute('SELECT idUsuario, nome, telefone, email, usuario, senha FROM usuarios')
         return cursor.fetchall()
