@@ -3,6 +3,8 @@ from tkinter import ttk
 from tkinter import messagebox
 import os
 from BDUsuario import Usuario, populate_treeview
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 class Application:
     def __init__(self, root):
@@ -10,7 +12,7 @@ class Application:
 
         self.root = root
         self.root.title("Cadastro de Usuários")
-        self.root.configure(bg="#81c784")  # Define a cor de fundo da janela principal
+        self.root.configure(bg="#81c784")
 
         self.lblIdUsuario = Label(root, text="idUsuario:", font=("Times", 16), bg="#81c784", fg="#1b5e20")
         self.lblIdUsuario.grid(row=0, column=0, padx=10, pady=10, sticky=W)
@@ -45,7 +47,6 @@ class Application:
         self.txtSenha = Entry(root, show="*")
         self.txtSenha.grid(row=5, column=1, padx=10, pady=10)
 
-        # Botões com estilização atualizada
         self.btnInserir = Button(root, text="Inserir", font=("Times", 14), bg="#a5d6a7", fg="#f0f0f0", activebackground="#1b5e20", activeforeground="#f0f0f0", command=self.inserir_usuario)
         self.btnInserir.grid(row=6, column=0, padx=6, pady=6)
 
@@ -58,22 +59,21 @@ class Application:
         self.btnVoltar = Button(root, text="Voltar", font=("Times", 14), bg="#a5d6a7", fg="#f0f0f0", activebackground="#1b5e20", activeforeground="#f0f0f0", command=self.Principal)
         self.btnVoltar.grid(row=6, column=3, padx=6, pady=6)
 
-        # Configurando o Treeview
+        self.btnGerarPDF = Button(root, text="Gerar PDF", font=("Times", 14), bg="#a5d6a7", fg="#f0f0f0", activebackground="#1b5e20", activeforeground="#f0f0f0", command=self.gerar_pdf)
+        self.btnGerarPDF.grid(row=6, column=4, padx=6, pady=6)
+
         self.columns = ('IDUSUÁRIO', 'NOME', 'TELEFONE', 'E-mail', 'USUÁRIO', 'SENHA')
         self.treeview = ttk.Treeview(root, columns=self.columns, show="headings")
         for col in self.columns:
             self.treeview.heading(col, text=col)
-        self.treeview.grid(row=8, column=0, columnspan=3, sticky="nsew")
+        self.treeview.grid(row=8, column=0, columnspan=4, sticky="nsew")
 
-        # Chama o método de refresh ao iniciar
         self.refresh_treeview()
 
-        # Bind para detectar o fechamento da janela
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
     def refresh_treeview(self):
-        """Função para atualizar o Treeview com os dados mais recentes."""
-        data = self.usuario.listar()  # Corrigido para usar self.usuario
+        data = self.usuario.listar()
         if not data:
             print("Nenhum dado encontrado ou ocorreu um erro ao buscar os dados.")
         else:
@@ -148,14 +148,41 @@ class Application:
         messagebox.showinfo("Sucesso", "Usuário excluído com sucesso!")
         self.refresh_treeview()
 
+    def gerar_pdf(self):
+        if not self.treeview.get_children():
+            messagebox.showerror("Erro", "Não há dados para gerar o PDF!")
+            return
+
+        resposta = messagebox.askyesno("Gerar PDF", "Deseja baixar o arquivo PDF com as informações?")
+        if not resposta:
+            return
+
+        # Determina o caminho para a pasta Downloads do usuário
+        caminho_downloads = os.path.join(os.path.expanduser("~"), "Downloads")
+        nome_arquivo = os.path.join(caminho_downloads, "usuarios.pdf")
+
+        c = canvas.Canvas(nome_arquivo, pagesize=letter)
+        c.drawString(100, 750, "Lista de Usuários")
+
+        y = 700
+        for child in self.treeview.get_children():
+            values = self.treeview.item(child)["values"]
+            linha = f"ID: {values[0]}, Nome: {values[1]}, Telefone: {values[2]}, E-mail: {values[3]}, Usuário: {values[4]}"
+            c.drawString(100, y, linha)
+            y -= 20
+            if y < 100:
+                c.showPage()
+                y = 750
+
+        c.save()
+
+        messagebox.showinfo("Sucesso", f"PDF gerado com sucesso em {nome_arquivo}!")
+
     def on_closing(self):
-        if messagebox.askokcancel("Sair", "Você deseja sair do aplicativo?"):
+        if messagebox.askokcancel("Sair", "Você deseja sair?"):
             self.root.destroy()
 
-
-# Execução da interface
 if __name__ == "__main__":
     root = Tk()
     app = Application(root)
-    root.state("zoomed")
     root.mainloop()

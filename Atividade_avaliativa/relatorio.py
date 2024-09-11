@@ -14,6 +14,7 @@ def exportar_para_pdf():
     print("PDF exportado com sucesso.")
 
 root = tk.Tk()
-root.title("Exportar para PDF")
+root.title("Exportar para PDF""Exportar Gráfico para PDF", command=exportar_para_pdf)
+botao_exportar = tk.Button(root, text='')
 botao_exportar.pack()
 root.mailoop()
